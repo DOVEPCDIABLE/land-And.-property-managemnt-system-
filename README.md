@@ -2,6 +2,56 @@
 
 PHP **8.4** / Laravel 13 / MySQL foundation for the ecosystem described in `real-eastate-business.txt`. The responsive Blade interface uses local CSS and needs no frontend build.
 
+This repository contains the working platform foundation and a public marketplace preview. Use it to manage accounts, organisation access, notifications, reminders, payment records and platform configuration. The full property-business ecosystem is being built in phases; opening a planned module does not activate a completed business workflow.
+
+## Start here
+
+- [How the system works](#how-the-system-works)
+- [Local installation](#local-setup)
+- [First-time administrator walkthrough](#first-time-administrator-walkthrough)
+- [Accounts and permissions](#accounts-workspaces-and-access)
+- [Branding, currencies and pricing](#super-admin-system-settings)
+- [Email and background jobs](#email-and-queues)
+- [Payments and verification](#payments)
+- [Project structure](#project-structure)
+- [Troubleshooting](#troubleshooting)
+- [Testing](#verification)
+- [Roadmap](#next-implementation-phases)
+
+## How the system works
+
+### Public website and inquiries
+
+Visitors can browse the homepage, filter concept properties, view details, compare properties and use the pricing calculator without signing in. Favourites and comparison selections live in that browser's local storage; they do not sync between devices or become account records.
+
+Inquiry forms save the visitor's request and preferences to MySQL. A permitted platform administrator reads them in **Public inquiries**. A submitted viewing request, listing request, valuation request or alert signup is an inquiry for review; it does not automatically publish a property, reserve a viewing, generate a valuation or start an alert campaign.
+
+### One account, several workspaces
+
+An account identifies a person. A workspace determines which business context that person is using. For example, the same person can be a buyer in their personal workspace and an agent in an agency workspace. Switching workspaces changes their available permissions, navigation and accessible records.
+
+Each membership connects an account to a workspace and its roles. The server checks the active account, verified email, membership, enabled module, requested action and record scope. Hiding a sidebar item is only a presentation effect; permission checks also apply to direct requests.
+
+| Workspace | What it is for | Typical users |
+| --- | --- | --- |
+| Personal | Individual profile, preferences and permitted personal activity | Buyer, owner, tenant, investor, service provider |
+| Organisation | A particular agency or business and its scoped operational records | Agency administrator, branch manager, agent, accountant, other staff |
+| Platform | Shared platform administration, organisations, public inquiries and global configuration | Super administrator, operations/compliance, support, according to their grants |
+
+Platform administration does not automatically grant access to private organisation records. Global **System settings** and organisation **Workspace settings** are separate screens with separate access rules.
+
+### Background delivery
+
+The web application saves requests and queues jobs. A queue worker delivers notifications and transactional email, and verifies eligible payment events. The scheduler finds due follow-ups every minute and queues Paystack reconciliation hourly. Both the worker and scheduler must be running for these background workflows to complete.
+
+For a scheduled reminder, the flow is: **pending → queued → sent**, with **cancelled** or **failed** where applicable. The worker rechecks relevant access before sending. Only pending reminders can be cancelled from the interface. In-app notifications are persistent inbox entries; toast notifications are temporary feedback such as “Settings saved” or validation errors.
+
+### Money and payment records
+
+A manual payment entry records a transaction that happened elsewhere and receives status `recorded`. It does not contact a provider or transfer money. An enabled gateway request creates checkout instructions and normally moves through `initializing → pending → paid`; initialization failures remain visible for investigation. A signed webhook queues a fresh provider-side check, and only a matching reference, amount and currency can confirm the payment.
+
+Every payment keeps its currency and decimal precision. Changing the platform's default currency changes new-entry defaults and preferred property display; it does not convert old payment records. Manual exchange rates are used only where a display conversion or calculator flat-fee conversion is explicitly needed.
+
 ## Implemented
 
 - Public editorial homepage at `/`, with local photography/fonts, a reduced-motion-aware architectural video hero, responsive search/filter forms, concept property/detail pages, locally saved favourites and comparisons, journal pages, and real inquiry capture.
@@ -11,7 +61,7 @@ PHP **8.4** / Laravel 13 / MySQL foundation for the ecosystem described in `real
 - Scoped multi-role memberships, enabled-module checks, active/disabled accounts and memberships, organisation isolation, account creation and access editing, and audit records. Platform administrators are created through the CLI; the web interface cannot grant that role or change its accounts.
 - Contextual personal, organisation and platform workspaces, with grouped sidebars for the 19 documented role templates and controlled workspace switching.
 - Personal notification inbox, scoped recipient selection, read state, queued email and in-app delivery. Dismissible toast feedback supports success, error, warning and information messages; success messages auto-dismiss with hover/focus pause.
-- Scheduled follow-ups, UTC storage with Africa/Lagos input/display, cancellation, retries and terminal failure state. Agents currently schedule personal reminders; agency administrators can schedule reminders for their agency users.
+- Scheduled follow-ups, UTC storage with the configured input/display timezone (Africa/Lagos by default), cancellation, retries and terminal failure state. Agents currently schedule personal reminders; agency administrators can schedule reminders for their agency users.
 - ZeptoMail API transport, including queued verification and reset emails. The default `log` mailer keeps development local.
 - Manual payment recording without moving money. Optional Paystack and Flutterwave v3 hosted checkout; Eversend Merchant API NGN temporary virtual accounts.
 - Signed webhooks, persisted event deduplication, queued server verification, exact amount/currency/reference matching, row-locked payment transitions and unique provider transaction IDs. Browser redirects never confirm payment.
@@ -19,9 +69,11 @@ PHP **8.4** / Laravel 13 / MySQL foundation for the ecosystem described in `real
 
 ## Local setup
 
-Requirements: PHP 8.4 with PDO MySQL, mbstring, OpenSSL, cURL, DOM/XML and standard Laravel extensions; Composer; MySQL 8 or compatible MariaDB. SQLite is used for isolated tests only.
+Requirements: PHP 8.4 with PDO MySQL, mbstring, OpenSSL, cURL, DOM/XML and standard Laravel extensions; Composer; MySQL 8 or compatible MariaDB. Install PDO SQLite for the default isolated test suite.
 
 ```sh
+git clone https://github.com/DOVEPCDIABLE/land-And.-property-managemnt-system-.git citiestate
+cd citiestate
 composer install
 cp .env.example .env
 php artisan key:generate
@@ -46,6 +98,42 @@ php artisan schedule:work
 ```
 
 Visit **http://127.0.0.1:8084**. A worker is required to send verification and reset emails. With `MAIL_MAILER=log`, find local emails in `storage/logs/laravel.log`.
+
+The public and workspace interfaces load assets directly from `public/css`, `public/js` and `public/media`. Node.js and a Vite build are optional for the current screens. PHP dependencies are installed by Composer; `vendor/`, local `.env`, runtime data and uploaded branding files are excluded from Git. A fresh clone creates a fresh database through migrations and does not include accounts from another installation.
+
+### First-time administrator walkthrough
+
+1. Complete installation, run migrations/seeding and create your super administrator with `ecosystem:admin`. Sign in at `/login` using the email and password you chose. CLI-provisioned administrators are already email-verified; public registrations require the verification-email flow.
+2. Select the **platform workspace** in `/workspaces`. Open **Administration → System settings** to set the platform name, logos, public contacts, colours, enabled currencies, preferred currency, timezone and calculator assumptions. Save the form; feedback appears as a toast. Reload before retrying if another administrator has changed its revision.
+3. Add explicit exchange rates if property display or flat-fee conversion is needed. For example, a pair means “1 unit of the base currency equals the entered number of quote-currency units.” No live-rate service is configured.
+4. Create an organisation in `/organisations`, selecting an existing account as its administrator, or provision an agency administrator using the CLI command above. The organisation receives its own workspace.
+5. Switch into that organisation. Use **Workspace settings** to enable permitted modules, then **Users & Access** to add members and assign roles/scopes. Add branches and teams where required. An existing member keeps the same account across organisations.
+6. With the required permission, send a test in-app notification or schedule a reminder for an eligible recipient. Check the inbox, worker output and local mail log before configuring external mail.
+7. Record a manual test payment in the appropriate workspace. Configure provider sandbox credentials, webhook endpoints and the gateway processing switch before attempting gateway collection. Personal workspaces cannot initiate gateway collection requests.
+8. Browse `/` and submit an inquiry with your own test details. Return to the platform workspace and confirm it appears in `/public-inquiries`.
+
+### Main screens
+
+Access depends on the selected workspace, roles and enabled modules. A URL existing does not give every account permission to open it.
+
+| Screen | Path | Purpose |
+| --- | --- | --- |
+| Public marketplace | `/` and `/properties` | Browse and filter concept properties |
+| Pricing calculator | `/pricing-calculator` | Estimate configured transaction costs, when enabled |
+| Sign in / registration | `/login`, `/register` | Access an existing account or create a personal account |
+| Dashboard | `/dashboard` | Overview for the active workspace |
+| Workspace switcher | `/workspaces` | Select an accessible workspace |
+| Global system settings | `/system/settings` | Super-admin branding, currencies, pricing and payment policies |
+| Workspace settings | `/workspace/settings` | Workspace configuration and module access |
+| Organisations | `/organisations` | Platform organisation administration |
+| Users & Access | `/users` | Permitted account and membership administration |
+| Branches and teams | `/workspace/branches` | Organisation structure |
+| Notifications | `/notifications` | Read your inbox; permitted users can send notifications |
+| Follow-ups | `/follow-ups` | Schedule and review scoped reminders |
+| Payment records | `/payments` | Manual records and permitted gateway requests |
+| Public inquiries | `/public-inquiries` | Review website requests |
+| Audit | `/workspace/audit` | Review permitted administrative activity |
+| Account | `/account/profile`, `/account/security`, `/account/preferences` | Profile, credentials, sessions and notification preferences |
 
 ### This machine: XAMPP + Herd
 
@@ -109,6 +197,10 @@ Property samples keep their original NGN denomination. A preferred display curre
 
 The public calculator at `/pricing-calculator` uses settings for commission %, service fee %, a currency-tagged flat fee, and tax on those fees. Fees round to the selected currency's minor unit using half-up rounding. The result includes assumptions; it is a transaction-cost estimate, not an automated valuation or a tax/legal quote. Flat-fee currency conversion needs a configured rate. All rates default to zero until set by the operator. The public calculator can be disabled in settings. Invoice/receipt prefixes are stored for the planned document module; document generation is not implemented by this settings change.
 
+For example, with a USD 1,000 price, 5% commission, 2% service fee, a USD 100 flat fee and 10% tax on fees, the calculator shows USD 50 commission + USD 20 service + USD 100 flat fee + USD 17 tax = **USD 187 fees**, or **USD 1,187 including the price**. These are illustrative administrator-defined inputs, not built-in statutory charges. Calculator submissions do not create invoices, payment requests or saved quotations.
+
+Settings saved through the UI take precedence over their defaults in `config/platform.php`. Before a processing preference is saved there, gateway enablement falls back to `PAYMENTS_ENABLED` in `.env`; afterwards, use the super-admin switch to change it. API keys and sending-domain credentials stay in server configuration. The locale selection does not provide a fully translated interface; the current interface copy is English.
+
 ## Email and queues
 
 Set `MAIL_MAILER=zeptomail`, `ZEPTOMAIL_API_KEY`, a verified `MAIL_FROM_ADDRESS` and `MAIL_FROM_NAME`. Set `ZEPTOMAIL_API_URL` to the sending URL shown for your account's data center; the default is `https://api.zeptomail.com/v1.1/email`. The endpoint is configurable because Zoho account/region endpoints differ. No keys are stored in the UI.
@@ -149,6 +241,52 @@ php artisan payments:reconcile --reference=<local-reference>
 A successful provider check must match the local reference, exact amount and currency. Failed, refunded and disputed events do not currently update payment accounting; add those workflows before production use. Webhook payloads may contain customer information; restrict database/log access and define retention before go-live.
 
 Provider references: [ZeptoMail send API](https://www.zoho.com/zeptomail/help/api/email-sending.html), [Paystack webhooks](https://paystack.com/docs/payments/webhooks/), [Flutterwave v3 webhooks](https://developer.flutterwave.com/docs/webhooks), [Eversend authentication](https://eversend.readme.io/reference/authentication-1), [Eversend webhooks](https://eversend.readme.io/reference/webhooks), [Eversend temporary accounts](https://eversend.readme.io/reference/ngn-collection-copy).
+
+## Project structure
+
+| Location | Responsibility |
+| --- | --- |
+| `routes/web.php` | Public, authentication, workspace, settings and webhook routes |
+| `routes/console.php` | Recurring follow-up, reconciliation and failed-job cleanup schedules |
+| `app/Http/Controllers` | Web actions and responses |
+| `app/Http/Requests` and `app/Http/Middleware` | Validation, active-account checks, workspace context and authorization |
+| `app/Services/WorkspaceAccess.php` and `Tenancy.php` | Module permissions, record scopes and recipient boundaries |
+| `app/Services/PlatformSettings.php`, `CurrencyService.php`, `PricingCalculator.php` | Global defaults/overrides, exact money display/conversion and fee calculations |
+| `app/Services/Payments` | Provider adapters, exact money parsing and verified results |
+| `app/Jobs`, `app/Notifications`, `app/Mail` | Queued work, notification delivery and ZeptoMail transport |
+| `app/Models` | Accounts, memberships, records, settings and persisted events |
+| `database/migrations` and `database/seeders` | Database schema and role/permission setup |
+| `config/workspaces.php` | Role templates, permissions, modules and scopes |
+| `config/marketplace.php` | Concept property catalogue and editorial content |
+| `config/currencies.php` and `config/platform.php` | Initial currency metadata and global setting defaults |
+| `resources/views` | Blade public pages and workspace screens |
+| `public/css`, `public/js`, `public/media` | Directly served styles, interactions and bundled media |
+| `tests/Feature` | Access, messaging, marketplace, payment and settings regression tests |
+
+## Troubleshooting
+
+| Symptom | What to check |
+| --- | --- |
+| PHP version error or blank page under XAMPP | Use PHP 8.4 for both web requests and CLI commands. Point the web server at `public/`. See the machine-specific commands above. |
+| Database connection or missing-table error | Confirm `DB_*`, MySQL availability and socket/port, then run `php artisan migrate --seed`. |
+| No administrator after installation | Seeding creates permissions, not a default login. Run `php artisan ecosystem:admin` with your email. |
+| Verification or password-reset email does not arrive | Run the `notifications` queue worker. With `MAIL_MAILER=log`, read the local log; with ZeptoMail, check the verified sender, credentials and failed jobs. |
+| Reminder remains pending | Ensure the scheduler runs every minute; `php artisan followups:dispatch` can queue due reminders manually. Then check the worker and the recipient's active membership/preferences. |
+| A screen is missing or returns 403 | Check the selected workspace, active membership, role permissions, scope and enabled modules. Global settings require a super-admin in the platform workspace. |
+| A screen says “Planned” | Its business workflow has not been implemented; enabling the module does not build it. |
+| Prices stay in NGN after choosing another currency | Configure an explicit exchange-rate pair. Without one, original property currencies remain visible. |
+| A gateway rejects a currency | Record-currency support is broader than gateway support. Check provider policy, integration limits and merchant eligibility. |
+| Checkout returns but payment is still pending | Browser returns cannot confirm money. Check webhook delivery, the `payments` worker and server verification; use the verification commands above for a missed event. |
+| Environment changes do not take effect | Run `php artisan config:clear`, then restart queue workers. A saved UI setting overrides its server default. |
+| Settings save reports a revision conflict | Reload to review the latest values before saving your changes again. |
+
+## Deployment and stored data
+
+For a hosted installation, set `APP_URL` to its public HTTPS address and configure MySQL plus a writable `storage/` and `bootstrap/cache/`. Run the database queue worker under a process supervisor, and invoke `php artisan schedule:run` once per minute from the project directory. Keep the PHP executable consistent between the web server, worker and scheduler.
+
+Deploy migrations with `php artisan migrate --force`, cache configuration/routes/views after setting the environment, and restart workers after changing code. Create the initial administrator through the CLI, then finish platform setup in the UI. Never run `migrate:fresh` against a database you want to retain.
+
+Back up MySQL, uploaded branding under `public/media/branding/`, and any application files stored under `storage/app/`. Preserve the installation's `APP_KEY` securely with its backups; do not regenerate it on an existing installation. Git contains application source and example configuration, not the live database, login accounts, provider secrets or uploaded branding.
 
 ## Verification
 
