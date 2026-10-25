@@ -1,0 +1,3 @@
+@extends('layouts.app')
+@section('title','Audit trail')
+@section('content')<div class="page-heading"><div><div class="eyebrow">Access & accountability</div><h1>A clear record of change.</h1><p>Read-only audit events inside your current workspace and authorised scope.</p></div></div><div class="card table-wrap"><table><thead><tr><th>Action</th><th>Subject</th><th>Actor</th><th>When</th></tr></thead><tbody>@forelse($logs as $log)<tr><td>{{ $log->action }}</td><td>{{ $log->subject }}</td><td>{{ $log->user_id??'System' }}</td><td>{{ $log->created_at->timezone('Africa/Lagos')->format('d M Y, H:i') }}</td></tr>@empty<tr><td colspan="4" class="empty">No audit events in your scope.</td></tr>@endforelse</tbody></table>{{ $logs->links('partials.pagination') }}</div>@endsection

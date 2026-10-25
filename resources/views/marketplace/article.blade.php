@@ -1,0 +1,3 @@
+@extends('marketplace.layout')
+@section('title',$article['title'])
+@section('content')<article class="wrap article-page"><p class="kicker">{{ $article['category'] }} · citiESTATE JOURNAL</p><h1>{{ $article['title'] }}</h1><img src="{{ asset('media/'.$article['image']) }}" alt="Architectural illustration accompanying this guide"><p class="article-intro">{{ $article['intro'] }}</p>@foreach($article['paragraphs'] as $paragraph)<p>{{ $paragraph }}</p>@endforeach<p class="fine-print">General guidance for starting a conversation. Obtain independent professional advice for a specific property or transaction.</p><a class="underlink" href="{{ route('home') }}#journal">← Back to the journal</a></article>@endsection
