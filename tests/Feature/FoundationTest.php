@@ -26,7 +26,7 @@ class FoundationTest extends TestCase
     public function test_guests_are_redirected_to_login_and_login_screen_renders(): void
     {
         $this->get('/dashboard')->assertRedirect('/login');
-        $this->get('/login')->assertOk()->assertSee('citiESTATE');
+        $this->get('/login')->assertOk()->assertSee('Castegroup');
     }
 
     public function test_each_role_lands_on_its_panel_and_cannot_open_other_panels(): void

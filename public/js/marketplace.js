@@ -30,17 +30,18 @@
         all('.business-menu[open]').forEach(item => { if (!item.contains(event.target)) item.removeAttribute('open'); });
     });
 
+    const brandName = document.body.dataset.brandName || 'Castegroup';
     const inquiry = document.querySelector('#inquiry-dialog');
     const inquiryCopy = {
         listing: ['Your property. Its next chapter.', 'Tell us about the property you would like to sell or let. Live publishing is not active yet.'],
         viewing: ['See the possibilities.', 'Request information about this concept. It is not an active listing and no viewing is confirmed.'],
         valuation: ['A more informed next move.', 'Request a professional assessment. No automated estimate will be generated.'],
         professional: ['Find the right connection.', 'Tell us which kind of professional you need, or how you would like to join the planned directory.'],
-        agency: ['Make room for your business.', 'Register your agency’s interest in a citiESTATE workspace.'],
+        agency: ['Make room for your business.', `Register your agency’s interest in a ${brandName} workspace.`],
         referral: ['Better, together.', 'Register your interest in the planned agent and agency referral network.'],
         demo: ['Meet your next workspace.', 'Request a conversation about the working foundation, roadmap and future plans.'],
         alert: ['Let the right space find you.', 'Save your preferences for the team. Automatic matching and alert delivery are not active yet.'],
-        support: ['Let’s talk.', 'Tell the citiESTATE team how we can help.'],
+        support: ['Let’s talk.', `Tell the ${brandName} team how we can help.`],
         report: ['Thank you for speaking up.', 'Tell us what you noticed. Please do not include sensitive financial or identity details.']
     };
     function openInquiry(intent, preferences = {}, context = '') {

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\FollowUpController;
 use App\Http\Controllers\MarketplaceController;
 use App\Http\Controllers\MembershipController;
@@ -20,6 +21,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/pricing-calculator', [PricingCalculatorController::class, 'show'])->name('pricing.show');
 Route::post('/pricing-calculator', [PricingCalculatorController::class, 'calculate'])->middleware('throttle:30,1')->name('pricing.calculate');
 Route::get('/', [MarketplaceController::class, 'home'])->name('home');
+Route::get('/company/{page}', [CompanyController::class, 'show'])->name('company.show');
 Route::get('/properties', [MarketplaceController::class, 'properties'])->name('properties.index');
 Route::get('/properties/{slug}', [MarketplaceController::class, 'property'])->name('properties.show');
 Route::get('/journal/{slug}', [MarketplaceController::class, 'article'])->name('journal.show');

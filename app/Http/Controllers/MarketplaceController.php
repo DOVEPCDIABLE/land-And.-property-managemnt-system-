@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PublicInquiry;
 use App\Services\CurrencyService;
+use App\Services\PlatformSettings;
 use Brick\Math\BigDecimal;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -88,7 +89,7 @@ class MarketplaceController extends Controller
         }
         PublicInquiry::create(collect($data)->only(['name', 'email', 'intent', 'message', 'preferences'])->all());
 
-        return back()->with('status', 'Your request has been saved for the citiESTATE team. This is a preview; no viewing, valuation or alert delivery is confirmed yet.');
+        return back()->with('status', 'Your request has been saved for the '.app(PlatformSettings::class)->get('brand_name').' team. This is a preview; no viewing, valuation or alert delivery is confirmed yet.');
     }
 
     public function inquiries(): View
