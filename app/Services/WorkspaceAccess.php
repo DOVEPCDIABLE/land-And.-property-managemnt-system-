@@ -2,7 +2,10 @@
 
 namespace App\Services;
 
+use App\Models\Invoice;
+use App\Models\Lease;
 use App\Models\Membership;
+use App\Models\Receipt;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -97,7 +100,12 @@ class WorkspaceAccess
             'branch' => $m->branch_id ? $query->where('branch_id', $m->branch_id) : $query->whereRaw('1 = 0'),
             'team' => $m->team_id ? $query->where('team_id', $m->team_id) : $query->whereRaw('1 = 0'),
             'assigned' => $query->where(fn (Builder $q) => $q->where('user_id', $user->id)->orWhere('assigned_to', $user->id)),
-            default => $query->where('user_id', $user->id),
+            default => $query->where(function (Builder $q) use ($user, $permission): void {
+                $q->where('user_id', $user->id);
+                if (str_ends_with($permission, '.view') && in_array($q->getModel()::class, [Lease::class, Invoice::class, Receipt::class], true)) {
+                    $q->orWhere('tenant_user_id', $user->id);
+                }
+            }),
         };
     }
 
@@ -126,6 +134,12 @@ class WorkspaceAccess
             $items['inquiries'] = ['module' => 'inquiries', 'label' => 'Public inquiries', 'group' => 'Overview'];
         }
 
+        foreach (config('operations', []) as $entity => $definition) {
+            $module = $definition['module'];
+            if (! isset($items[$module]) && $this->scope($user, $module.'.view')) {
+                $items[$module] = ['module' => $module, 'label' => config('workspaces.modules.'.$module.'.label'), 'group' => config('workspaces.modules.'.$module.'.group')];
+            }
+        }
         if ($user->isPlatformAdmin()) {
             $items['system_settings'] = ['module' => 'system_settings', 'label' => 'System settings', 'group' => 'Administration'];
         }
@@ -135,6 +149,11 @@ class WorkspaceAccess
 
     public function url(string $module): string
     {
+        $operational = ['properties' => 'properties', 'marketplace' => 'properties', 'management' => 'units', 'leases' => 'leases', 'maintenance' => 'maintenance', 'inspections' => 'inspections', 'documents' => 'documents', 'payroll' => 'staff', 'calendar' => 'appointments', 'referrals' => 'referrals', 'services' => 'bookings', 'provider' => 'services', 'construction' => 'projects', 'developments' => 'projects'];
+        if (isset($operational[$module])) {
+            return route('operations.index', $operational[$module]);
+        }
+
         return match ($module) {
             'system_settings' => route('system.settings'),
             'browse' => route('properties.index', request()->user()?->currentMembership()?->roles->contains('name', 'tenant') && ! request()->user()?->currentMembership()?->roles->contains('name', 'buyer') ? ['purpose' => 'rent'] : []), 'overview' => route('dashboard'),'notifications' => route('notifications.index'),'users' => request()->user()?->hasPermission('users.lookup') && ! request()->user()?->hasPermission('users.manage') ? route('accounts.lookup') : route('users.index'),'payments' => route('payments.index'),'followups' => route('followups.index'),'integrations' => route('integrations.index'),'organisations' => route('organisations.index'),'branches' => route('branches.index'),'settings' => route('workspaces.settings'),'profile' => route('account.profile'),'security' => route('account.security'),'preferences' => route('account.preferences'),'audit' => route('audit.index'),'inquiries' => route('inquiries.index'),default => route('modules.show', $module)

@@ -133,19 +133,19 @@
             const wrapper = make('div', '', 'comparison-wrap');
             const table = make('table', '', 'comparison-table');
             const header = document.createElement('tr');
-            header.append(make('th', 'Concept property'));
+            header.append(make('th', 'Property'));
             selected.forEach(property => header.append(make('th', property.name)));
             const thead = document.createElement('thead'); thead.append(header); table.append(thead);
             const tbody = document.createElement('tbody');
-            const rows = [['Location', p => p.location], ['Type', p => p.type], ['Purpose', p => p.purpose], ['Sample price', p => currency(p) + (p.purpose === 'rent' ? ' / year' : '')], ['Bedrooms', p => String(p.beds)], ['Bathrooms', p => String(p.baths)], ['Area', p => `${p.area} m²`], ['Furnished', p => p.furnished ? 'Yes' : 'No']];
+            const rows = [['Location', p => p.location], ['Type', p => p.type], ['Purpose', p => p.purpose], ['Price', p => currency(p) + (p.purpose === 'rent' ? ' / year' : '')], ['Bedrooms', p => String(p.beds)], ['Bathrooms', p => String(p.baths)], ['Area', p => `${p.area} m²`], ['Furnished', p => p.furnished ? 'Yes' : 'No']];
             rows.forEach(([label, value]) => { const tr = document.createElement('tr'); const th = make('th', label); th.scope = 'row'; tr.append(th); selected.forEach(property => tr.append(make('td', value(property)))); tbody.append(tr); });
             table.append(tbody); wrapper.append(table); content.append(wrapper);
         } else {
             const grid = make('div', '', 'collection-items');
             selected.forEach(property => {
                 const card = make('article', '', 'collection-item');
-                const image = document.createElement('img'); image.src = `/media/${property.image}`; image.alt = `Illustrative concept: ${property.name}`;
-                const link = make('a', 'View concept ↗'); link.href = `/properties/${encodeURIComponent(property.slug)}?currency=${encodeURIComponent(property.display_currency || property.currency)}`;
+                const image = document.createElement('img'); image.src = property.image_url; image.alt = property.is_concept ? `Illustrative concept: ${property.name}` : property.name;
+                const link = make('a', property.is_concept ? 'View concept ↗' : 'View property ↗'); link.href = property.detail_url;
                 card.append(image, make('h3', property.name), make('p', property.location), make('p', currency(property)), link);
                 grid.append(card);
             });

@@ -17,3 +17,11 @@
     };
     if (currency && amount) { currency.addEventListener('change', update); update(); }
 })();
+
+document.querySelector('[data-add-invoice-item]')?.addEventListener('click', () => {
+    const container = document.querySelector('[data-invoice-items]');
+    const index = container.children.length;
+    const row = container.firstElementChild.cloneNode(true);
+    row.querySelectorAll('input').forEach(input => { input.name = input.name.replace(/items\[\d+\]/, `items[${index}]`); input.value = input.name.endsWith('[quantity]') ? '1' : ''; });
+    container.append(row);
+});

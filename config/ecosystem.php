@@ -20,7 +20,7 @@ return [
         ['name' => 'AI assistant', 'description' => 'Descriptions, client responses, matching and pricing suggestions.', 'flagship' => true],
         ['name' => 'Agent management', 'description' => 'Assignments, commissions, activity and performance.', 'flagship' => false],
         ['name' => 'Property management', 'description' => 'Tenants, leases, maintenance, inspections and occupancy.', 'flagship' => false],
-        ['name' => 'Receipts & invoices', 'description' => 'Manual payment records are ready; documents and invoices come next.', 'flagship' => false],
+        ['name' => 'Receipts & invoices', 'description' => 'Payment records, printable invoices and receipts with partial-payment balances.', 'flagship' => false],
         ['name' => 'Finance & business', 'description' => 'Revenue, expenses, payroll, branches and reporting.', 'flagship' => false],
         ['name' => 'Documents', 'description' => 'Contracts, ownership records, leases and reports.', 'flagship' => false],
         ['name' => 'Appointments & viewings', 'description' => 'Calendars, bookings and reminders.', 'flagship' => false],

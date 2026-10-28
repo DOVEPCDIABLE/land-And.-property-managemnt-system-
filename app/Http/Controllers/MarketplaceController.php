@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PublicInquiry;
 use App\Services\CurrencyService;
 use App\Services\PlatformSettings;
+use App\Services\PropertyCatalog;
 use Brick\Math\BigDecimal;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,13 +17,7 @@ class MarketplaceController extends Controller
 {
     private function catalog(): Collection
     {
-        $currencies = app(CurrencyService::class);
-        $target = request('currency', $currencies->default());
-        if (! is_string($target) || ! array_key_exists($target, $currencies->enabled())) {
-            $target = $currencies->default();
-        }
-
-        return collect(config('marketplace.properties'))->map(fn (array $p) => $currencies->listing($p, $target));
+        return app(PropertyCatalog::class)->properties(is_string(request('currency')) ? request('currency') : null);
     }
 
     public function home(): View

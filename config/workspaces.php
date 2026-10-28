@@ -1,6 +1,6 @@
 <?php
 
-return [
+$config = [
     'actions' => [
         'view',
         'create',
@@ -3351,3 +3351,27 @@ return [
         'financial_operations',
     ],
 ];
+
+$operationalModules = ['properties', 'marketplace', 'management', 'leases', 'maintenance', 'inspections', 'documents', 'payroll', 'calendar', 'referrals', 'services', 'provider', 'construction', 'developments'];
+foreach ($operationalModules as $module) {
+    $config['modules'][$module]['implemented'] = true;
+    if (! in_array($module, $config['default_modules'], true)) {
+        $config['default_modules'][] = $module;
+    }
+}
+foreach (['platform_admin' => 'platform', 'agency_admin' => 'organisation'] as $role => $scope) {
+    foreach ($operationalModules as $module) {
+        foreach (['view', 'create', 'edit', 'delete', 'assign', 'approve', 'publish', 'export', 'manage'] as $action) {
+            $config['roles'][$role]['permissions'][$module.'.'.$action] = $scope;
+        }
+    }
+}
+$config['roles']['service_provider']['permissions']['provider.publish'] = 'own';
+
+foreach (['buyer', 'tenant', 'investor', 'client'] as $role) {
+    foreach (['view', 'create', 'edit'] as $action) {
+        $config['roles'][$role]['permissions']['services.'.$action] = 'own';
+    }
+}
+
+return $config;

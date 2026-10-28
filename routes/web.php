@@ -2,22 +2,27 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BillingController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\ExchangeWorkflowController;
 use App\Http\Controllers\FollowUpController;
 use App\Http\Controllers\MarketplaceController;
 use App\Http\Controllers\MembershipController;
 use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\OperationalController;
 use App\Http\Controllers\OrganisationController;
 use App\Http\Controllers\PanelController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PlatformSettingsController;
 use App\Http\Controllers\PricingCalculatorController;
+use App\Http\Controllers\PropertyAdminController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\WorkspaceController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/professionals', [ExchangeWorkflowController::class, 'directory'])->name('services.directory');
 Route::get('/pricing-calculator', [PricingCalculatorController::class, 'show'])->name('pricing.show');
 Route::post('/pricing-calculator', [PricingCalculatorController::class, 'calculate'])->middleware('throttle:30,1')->name('pricing.calculate');
 Route::get('/', [MarketplaceController::class, 'home'])->name('home');
@@ -44,6 +49,27 @@ Route::middleware(['auth', 'auth.session', 'active', 'workspace'])->group(functi
     Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verify'])->middleware('signed')->name('verification.verify');
     Route::post('/email/verification-notification', [AuthController::class, 'resend'])->middleware('throttle:3,1')->name('verification.send');
     Route::middleware('verified')->group(function (): void {
+        Route::get('/operations/finance/report', [OperationalController::class, 'finance'])->name('operations.finance');
+        Route::get('/operations/{entity}/export', [OperationalController::class, 'export'])->name('operations.export');
+        Route::get('/operations/{entity}/incoming', [ExchangeWorkflowController::class, 'inbox'])->name('operations.incoming');
+        Route::patch('/operations/{entity}/{record}/respond', [ExchangeWorkflowController::class, 'respond'])->whereNumber('record')->name('operations.respond');
+        Route::get('/operations/{entity}', [OperationalController::class, 'index'])->name('operations.index');
+        Route::get('/operations/{entity}/create', [OperationalController::class, 'create'])->name('operations.create');
+        Route::post('/operations/{entity}', [OperationalController::class, 'store'])->name('operations.store');
+        Route::get('/operations/{entity}/{record}', [OperationalController::class, 'show'])->whereNumber('record')->name('operations.show');
+        Route::get('/operations/{entity}/{record}/edit', [OperationalController::class, 'edit'])->whereNumber('record')->name('operations.edit');
+        Route::patch('/operations/{entity}/{record}', [OperationalController::class, 'update'])->whereNumber('record')->name('operations.update');
+        Route::delete('/operations/{entity}/{record}', [OperationalController::class, 'destroy'])->whereNumber('record')->name('operations.destroy');
+        Route::get('/catalog/site-media', [PropertyAdminController::class, 'library'])->name('properties.library');
+        Route::post('/catalog/site-media/{media}', [PropertyAdminController::class, 'replace'])->name('properties.replace');
+        Route::post('/catalog/import', [PropertyAdminController::class, 'import'])->name('properties.import');
+        Route::post('/catalog/{property}/media/{media}', [PropertyAdminController::class, 'media'])->name('properties.media');
+        Route::get('/private-documents/{document}', [OperationalController::class, 'download'])->name('documents.download');
+        Route::post('/billing/invoices/{invoice}/status', [BillingController::class, 'transition'])->name('billing.transition');
+        Route::post('/billing/invoices/{invoice}/receipts', [BillingController::class, 'receive'])->name('billing.receive');
+        Route::get('/billing/invoices/{invoice}/print', [BillingController::class, 'invoice'])->name('billing.invoice');
+        Route::get('/billing/receipts/{receipt}/print', [BillingController::class, 'receipt'])->name('billing.receipt');
+
         Route::get('/public-inquiries', [MarketplaceController::class, 'inquiries'])->middleware('permission:inquiries.view')->name('inquiries.index');
 
         Route::middleware('super_admin')->group(function (): void {

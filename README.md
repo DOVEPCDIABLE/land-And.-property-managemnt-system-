@@ -2,7 +2,7 @@
 
 PHP **8.4** / Laravel 13 / MySQL foundation for the ecosystem described in `real-eastate-business.txt`. The responsive Blade interface uses local CSS and needs no frontend build.
 
-This repository contains the working platform foundation and a public marketplace preview. Use it to manage accounts, organisation access, notifications, reminders, payment records and platform configuration. The full property-business ecosystem is being built in phases; opening a planned module does not activate a completed business workflow.
+This repository contains the working platform foundation and a public marketplace preview. Use it to manage accounts, organisation access, notifications, reminders, payment records and platform configuration. Property operations, billing, finance records, documents, calendars, referrals, professional services and construction now have operational screens. CRM, discovery, automated valuation, AI and campaign tools remain separate roadmap work.
 
 ## Start here
 
@@ -55,7 +55,7 @@ Every payment keeps its currency and decimal precision. Changing the platform's 
 ## Implemented
 
 - Public editorial homepage at `/`, with local photography/fonts, a reduced-motion-aware architectural video hero, responsive search/filter forms, concept property/detail pages, locally saved favourites and comparisons, journal pages, and real inquiry capture.
-- Public requests are stored in `public_inquiries` and reviewed by platform administrators at `/public-inquiries`. Property listings are clearly labelled concepts. No fabricated professionals, testimonials, verifications, market statistics or live availability are presented. Automated valuations, alert delivery, marketplace publishing and directory/referral workflows remain planned.
+- Public requests are stored in `public_inquiries` and reviewed by platform administrators at `/public-inquiries`. Property listings are clearly labelled concepts. No fabricated professionals, testimonials, verifications, market statistics or live availability are presented. Automated valuations and property-alert delivery remain planned. Authorised workspaces can publish property/service records and manage consented referrals.
 
 - Login/logout, email verification, password reset, throttling, encrypted database sessions and password-hash session invalidation.
 - Scoped multi-role memberships, enabled-module checks, active/disabled accounts and memberships, organisation isolation, account creation and access editing, and audit records. Platform administrators are created through the CLI; the web interface cannot grant that role or change its accounts.
@@ -65,7 +65,7 @@ Every payment keeps its currency and decimal precision. Changing the platform's 
 - ZeptoMail API transport, including queued verification and reset emails. The default `log` mailer keeps development local.
 - Manual payment recording without moving money. Optional Paystack and Flutterwave v3 hosted checkout; Eversend Merchant API NGN temporary virtual accounts.
 - Signed webhooks, persisted event deduplication, queued server verification, exact amount/currency/reference matching, row-locked payment transitions and unique provider transaction IDs. Browser redirects never confirm payment.
-- A roadmap showing all 16 modules and the six flagship features. The business workflows are planned, not complete.
+- A roadmap showing all 16 modules and the six flagship features. Unfinished modules remain labelled planned; implemented operations are described below.
 
 ## Local setup
 
@@ -175,7 +175,7 @@ A single account can have a personal workspace and several organisation membersh
 - Account pages support personal roles/profile, password changes with current-password confirmation, database-session listing/revocation and in-app/email preferences. Two-factor authentication is explicitly planned, not enabled.
 - Workspace switches, role assignments, organisation changes, support lookups, account security changes and record mutations are audited. Notification inboxes are workspace-scoped; old account-level notifications remain personal account events. Deferred reminders are cancelled when relevant membership access is revoked.
 
-Create an organisation from **Platform → Organisations** with an existing account as administrator. Then switch into that organisation, add branches/teams if needed, and add existing accounts through **Users & Access**. Administrators can enable modules in **Workspace settings**. Selecting a planned module only exposes its roadmap; CRM, tenancy, construction and other domain workflows still require implementation.
+Create an organisation from **Platform → Organisations** with an existing account as administrator. Then switch into that organisation, add branches/teams if needed, and add existing accounts through **Users & Access**. Administrators can enable modules in **Workspace settings**. Selecting a planned module only exposes its roadmap. Property operations and construction now open working record-management screens; CRM and other remaining planned modules retain roadmap pages.
 
 The workspace migration preserves existing accounts and provisions memberships from their legacy roles. Historic records are assigned by organisation or user where this can be determined; records without a safe mapping remain outside accessible workspace queries and need operator review. The seed command synchronises role grants and scopes idempotently:
 
@@ -199,7 +199,7 @@ Amounts are integer minor units, using exact decimal arithmetic from the framewo
 
 Property samples keep their original NGN denomination. A preferred display currency is used only with an explicit manual direct or reciprocal exchange rate. Without a configured rate, the native currency remains visible; cross-currency budget filters exclude prices that cannot be converted. Rates are labelled manual with update times and do not claim live market accuracy.
 
-The public calculator at `/pricing-calculator` uses settings for commission %, service fee %, a currency-tagged flat fee, and tax on those fees. Fees round to the selected currency's minor unit using half-up rounding. The result includes assumptions; it is a transaction-cost estimate, not an automated valuation or a tax/legal quote. Flat-fee currency conversion needs a configured rate. All rates default to zero until set by the operator. The public calculator can be disabled in settings. Invoice/receipt prefixes are stored for the planned document module; document generation is not implemented by this settings change.
+The public calculator at `/pricing-calculator` uses settings for commission %, service fee %, a currency-tagged flat fee, and tax on those fees. Fees round to the selected currency's minor unit using half-up rounding. The result includes assumptions; it is a transaction-cost estimate, not an automated valuation or a tax/legal quote. Flat-fee currency conversion needs a configured rate. All rates default to zero until set by the operator. The public calculator can be disabled in settings. Invoice/receipt prefixes are used by the billing screens. Printable invoices and receipts can also be saved as PDF using the browser print dialog.
 
 For example, with a USD 1,000 price, 5% commission, 2% service fee, a USD 100 flat fee and 10% tax on fees, the calculator shows USD 50 commission + USD 20 service + USD 100 flat fee + USD 17 tax = **USD 187 fees**, or **USD 1,187 including the price**. These are illustrative administrator-defined inputs, not built-in statutory charges. Calculator submissions do not create invoices, payment requests or saved quotations.
 
@@ -217,7 +217,7 @@ Delivery is **at least once**: an email provider may accept a request just befor
 
 ## Payments
 
-`PAYMENTS_ENABLED=false` by default. This preserves the requirements' distinction: property sale/rent payments can be recorded manually, while optional gateway requests can collect platform fees. Manual records support the configured currency catalogue, including 0, 2, 3, 4 and custom decimal units. The original currency and minor-unit precision are stored on each payment; there are no payouts, refunds, escrow, subscriptions, invoice generation or commission settlement yet.
+`PAYMENTS_ENABLED=false` by default. This preserves the requirements' distinction: property sale/rent payments can be recorded manually, while optional gateway requests can collect platform fees. Manual records support the configured currency catalogue, including 0, 2, 3, 4 and custom decimal units. The original currency and minor-unit precision are stored on each payment; there are no payouts, refunds, escrow, subscriptions or automated commission settlement yet.
 
 Before enabling gateway requests, configure sandbox credentials and a public HTTPS webhook URL in each provider dashboard:
 
@@ -245,6 +245,24 @@ php artisan payments:reconcile --reference=<local-reference>
 A successful provider check must match the local reference, exact amount and currency. Failed, refunded and disputed events do not currently update payment accounting; add those workflows before production use. Webhook payloads may contain customer information; restrict database/log access and define retention before go-live.
 
 Provider references: [ZeptoMail send API](https://www.zoho.com/zeptomail/help/api/email-sending.html), [Paystack webhooks](https://paystack.com/docs/payments/webhooks/), [Flutterwave v3 webhooks](https://developer.flutterwave.com/docs/webhooks), [Eversend authentication](https://eversend.readme.io/reference/authentication-1), [Eversend webhooks](https://eversend.readme.io/reference/webhooks), [Eversend temporary accounts](https://eversend.readme.io/reference/ngn-collection-copy).
+
+## Operational modules and database catalogue
+
+The admin workspace now includes property records and media, units, tenant/landlord contacts, leases, occupancy metrics, maintenance tickets, inspections, private documents, invoices/receipts, expenses, staff/payroll, appointments, referrals, professional services and construction projects. Use the sidebar or the operations tabs at `/operations/properties`. Every list, write, download and export is workspace/scoped; platform membership does not grant private organisation access.
+
+- **Catalogue and images:** migrations import the nine original properties with exact prices, currencies and concept flags. Public search, detail pages and comparison data now read the database. Images/videos are registered in `property_media`; binary files stay on disk. Property edit screens upload media and choose covers. The super-admin website image library at `/catalog/site-media` replaces homepage/editorial assets through database references. `php artisan properties:import-catalog` is repeatable and preserves edits, archives and replaced images.
+- **Property management:** create units and tenant contacts, activate dated leases with overlap checks, track occupancy from active lease dates, record maintenance priority/cost/status and inspection findings. Units with lease history cannot be reassigned to another property. Sold units record the buyer, sale date and agreed price. These sale records do not fabricate cash receipts. Link a contact to an active account in the same workspace to give that tenant read access to their leases, invoices and receipts; tenancy access does not grant editing or receipt creation.
+- **Billing:** draft and issue invoices with multiple line items and exact tax arithmetic. Issued customer/issuer details and amounts are preserved. Record partial payments, link an existing matching confirmed payment or create a manual payment, and print invoices/receipts. Overpayment and duplicate allocation are rejected. Unpaid invoices can be voided; receipts are immutable.
+- **Finance:** income and expenses are reported separately per currency, with outstanding/overdue invoices. Staff records and monthly payroll support gross pay, allowances, manually calculated deductions, approval and paid state. Recording approved payroll as paid posts one expense. This is cash-record reporting, not an audited accounting system, statutory payroll/tax engine or money-transfer service.
+- **Documents:** upload PDF, Word or image documents privately, categorise them, link properties/leases/projects, track expiry and download through authorised routes. Branding/public media storage is separate from private documents.
+- **Calendar:** record appointments/viewings, filter by date, reject staff overlaps, reschedule/cancel and queue staff reminders. `appointments:remind` runs every minute through the scheduler. Reminder jobs recheck membership, status and schedule version before delivery.
+- **Referrals:** share consented client details and proposed terms with a selected organisation. Its permitted administrator accepts/declines; the sender tracks completion or cancellation. Incoming requests reveal only explicitly shared fields, not the originating workspace's private records.
+- **Professional services:** publish service profiles at `/professionals`; authenticated customers consent to share their name/email and submit requests, providers quote and customers accept before completion. Published profiles do not imply credential verification. Booking and quote actions do not collect money.
+- **Construction:** track projects, budgets and append-only progress/cost logs, attach project documents, link property/unit inventory and record reserved/sold units. Progress updates drive the current completion percentage.
+
+Operational CSV exports require both the module export grant and the membership export flag. Public inquiries remain requests for review; they do not automatically book a viewing. SMS/WhatsApp campaigns, automatic valuations, the AI assistant, bank reconciliation, subscriptions, escrow, refunds and automated referral payouts are not introduced by this release.
+
+For deployment, back up the production database and uploads, deploy the source, run `php artisan migrate --force`, clear/rebuild Laravel caches, and restart queue workers. Migrations synchronise role templates and import the original catalogue without overwriting existing records. Keep the database queue worker and minute-level scheduler running. Include `public/media/properties/`, `public/media/branding/` and `storage/app/private/` in upload backups; they are not stored in Git.
 
 ## Project structure
 
@@ -311,12 +329,12 @@ Never point test runs at the development or production database: the test suite 
 
 ## Next implementation phases
 
-1. Property sales/rentals and CRM: property/media models, scoped clients, lead stages, preferences, inquiries and assignments.
-2. Follow-up workflows: appointments/viewings, communication history, templates, campaign consent, SMS/WhatsApp connectors and delivery receipts.
+1. Extend CRM with lead stages, preferences and communication history around the property/contact records.
+2. Extend follow-ups with communication history, templates, campaign consent, SMS/WhatsApp connectors and delivery receipts.
 3. Flagship lead discovery, valuation and AI: permitted-source connectors, provenance and deduplication, comparable-property data, explainable estimates and provider-backed assistance.
-4. Agent commissions and referrals; leases, maintenance, inspections, receipts/invoices and documents.
-5. Finance, branches/payroll, professional services and construction/project inventories.
+4. Extend the operational modules with advanced reporting, document versioning/signature integrations, recurring billing, and automated commission settlement where required.
+5. Extend financial records, staff/payroll, services and construction workflows as business-specific requirements are defined.
 
-The roadmap UI explicitly labels unfinished workflows. No scraper, valuation model, AI provider, campaign sender or referral network is represented as functioning yet.
+The roadmap UI explicitly labels unfinished workflows. No scraper, valuation model, AI provider or bulk campaign sender is represented as functioning yet. The referral network now supports consented, two-party referral workflows.
 
 For production, configure HTTPS and secure cookies, `APP_ENV=production`, `APP_DEBUG=false`, a dedicated database account, worker supervision, a minute-level scheduler, provider sandbox validation, backups, log/payload retention and application monitoring. Deploy behind a PHP 8.4 web runtime rooted at `public/`, then run Laravel's configuration/route/view cache commands.
