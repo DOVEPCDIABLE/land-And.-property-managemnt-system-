@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'brand_name' => 'Castegroup', 'tagline' => 'Exceptional spaces. Smarter connections.',
+    'brand_name' => 'CASTÉ', 'tagline' => 'Exceptional spaces. Smarter connections.',
     'company_name' => 'CASTÉ Homes Ltd', 'support_email' => '', 'support_phone' => '+234 802 377 4420', 'address' => 'Plot 4270, Moh’d Namadi Sambo Way, Cadastral Zone C06, Nbora District, Abuja, FCT',
     'primary_color' => '#FFAA18', 'secondary_color' => '#FF6508', 'background_color' => '#FAF8F5', 'text_color' => '#171717',
     'logo_dark' => null, 'logo_light' => null, 'favicon' => null,

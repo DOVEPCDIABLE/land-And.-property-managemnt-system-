@@ -14,7 +14,7 @@ class MarketplaceTest extends TestCase
 
     public function test_homepage_is_public_and_labels_concept_content(): void
     {
-        $this->get('/')->assertOk()->assertSee('Castegroup')->assertSee('Find a place.')
+        $this->get('/')->assertOk()->assertSee('CASTÉ')->assertSee('Find a place.')
             ->assertSee('CONCEPT COLLECTION')->assertSee('Not active listings.')
             ->assertSee('/media/architecture.mp4', false);
     }

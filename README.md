@@ -1,4 +1,4 @@
-# Castegroup — Real Estate Business Ecosystem
+# CASTÉ — Real Estate Business Ecosystem
 
 PHP **8.4** / Laravel 13 / MySQL foundation for the ecosystem described in `real-eastate-business.txt`. The responsive Blade interface uses local CSS and needs no frontend build.
 
@@ -185,7 +185,7 @@ php artisan db:seed --class=AccessControlSeeder
 
 ## Super-admin system settings
 
-The public brand is **Castegroup**. The company story, vision, mission, values, founder message from Olusegun Toluhi, and WorkSpaces hospitality introduction are available under **Our Story**, at `/company/about`, `/company/founder` and `/company/workspaces`. The supplied corporate materials identify the company as **CASTÉ Homes Ltd**; that name remains in the attributed corporate copy. WorkSpaces is a portfolio introduction, with no booking, project delivery or availability claims. Company editorial content is in `config/company.php`; phone/address and branding remain editable through system settings. No public support email was supplied, so no placeholder email is published.
+The public brand is **CASTÉ**. The company story, vision, mission, values, founder message from Olusegun Toluhi, and WorkSpaces hospitality introduction are available under **Our Story**, at `/company/about`, `/company/founder` and `/company/workspaces`. The supplied corporate materials identify the company as **CASTÉ Homes Ltd**; that name remains in the attributed corporate copy. WorkSpaces is a portfolio introduction, with no booking, project delivery or availability claims. Company editorial content is in `config/company.php`; phone/address and branding remain editable through system settings. No public support email was supplied, so no placeholder email is published.
 
 For an existing deployment, pull this update, run `php artisan migrate --force`, then `php artisan optimize:clear` and `php artisan queue:restart`. The rebranding migration updates the original citiESTATE defaults and platform-workspace name, preserves custom branding/configuration and historical records, and fills missing legacy contact details. Saved favourites/comparisons keep their original browser storage keys so selections survive the rename. Uploaded logos are retained; replace an old wordmark through settings if required.
 

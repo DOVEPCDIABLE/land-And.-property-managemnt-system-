@@ -30,7 +30,7 @@
         all('.business-menu[open]').forEach(item => { if (!item.contains(event.target)) item.removeAttribute('open'); });
     });
 
-    const brandName = document.body.dataset.brandName || 'Castegroup';
+    const brandName = document.body.dataset.brandName || 'CASTÉ';
     const inquiry = document.querySelector('#inquiry-dialog');
     const inquiryCopy = {
         listing: ['Your property. Its next chapter.', 'Tell us about the property you would like to sell or let. Live publishing is not active yet.'],

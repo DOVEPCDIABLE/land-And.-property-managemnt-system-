@@ -14,7 +14,7 @@ class CompanyPagesTest extends TestCase
 
     public function test_homepage_keeps_the_marketplace_and_business_features_with_the_new_company_content(): void
     {
-        $this->get('/')->assertOk()->assertSee('Castegroup')->assertDontSee('citiESTATE')
+        $this->get('/')->assertOk()->assertSee('CASTÉ')->assertDontSee('citiESTATE')
             ->assertSee('CONCEPT COLLECTION')->assertSee('Automated Follow-Ups')
             ->assertSee('Client Relationship Management')->assertSee('WorkSpaces')
             ->assertSee('Olusegun Toluhi')->assertSee('CASTÉ Homes Ltd')
